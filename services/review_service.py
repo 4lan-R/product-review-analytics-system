@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from models.product import Product as ProductModel
 from models.review import Review as ReviewModel
 from schemas.review import ReviewCreate, SentimentAnalysisRequest
+from services.review_scraper import scrape_review_from_link
 
 
 def collect_review(db: Session, review: ReviewCreate) -> ReviewModel:
@@ -71,6 +72,12 @@ def search_reviews(
         query = query.filter(ReviewModel.rating == rating)
 
     return query.all()
+
+
+def collect_review_from_link(db: Session, link: str) -> ReviewModel:
+    """Fetch review content from a URL, then persist it as a review."""
+    scraped_review = scrape_review_from_link(link)
+    return collect_review(db, scraped_review)
 
 
 def analyze_sentiment(request: SentimentAnalysisRequest) -> dict[str, Any]:

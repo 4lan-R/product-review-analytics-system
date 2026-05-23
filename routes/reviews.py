@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas.review import ReviewCreate, Review, AnalysisResult, SentimentAnalysisRequest
-from services.review_service import collect_review, search_reviews, analyze_sentiment
+from schemas.review import ReviewLinkCreate, Review, AnalysisResult, SentimentAnalysisRequest
+from services.review_service import collect_review_from_link, search_reviews, analyze_sentiment
 
 router = APIRouter(
     prefix="/api/reviews",
@@ -13,15 +13,16 @@ router = APIRouter(
 
 
 @router.post("/collect", response_model=Review)
-async def collect_review_endpoint(review: ReviewCreate, db: Session = Depends(get_db)):
+async def collect_review_endpoint(
+    payload: ReviewLinkCreate,
+    db: Session = Depends(get_db),
+):
     """
-    Collect a scraped review and automatically create the associated product.
-
-    If the product does not exist, it will be created from the supplied product
-    information. This endpoint stores both product and review data together.
+    Collect a review by scraping the provided link and automatically create
+    the associated product from extracted page metadata.
     """
     try:
-        return collect_review(db, review)
+        return collect_review_from_link(db, payload.link)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

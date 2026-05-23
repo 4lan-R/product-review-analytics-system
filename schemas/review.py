@@ -1,5 +1,5 @@
 """Pydantic schemas for request/response validation"""
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from datetime import datetime
 
 
@@ -17,6 +17,10 @@ class ReviewBase(BaseModel):
 
 class ReviewCreate(ReviewBase):
     pass
+
+
+class ReviewLinkCreate(BaseModel):
+    link: HttpUrl
 
 
 class Review(ReviewBase):
