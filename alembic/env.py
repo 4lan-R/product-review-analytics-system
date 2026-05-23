@@ -21,7 +21,7 @@ config.set_main_option("sqlalchemy.url", database_url)
 
 # Import the models for autogenerate support
 from database import Base
-from models import Review
+from models import Review, Product
 
 target_metadata = Base.metadata
 

@@ -128,12 +128,29 @@ alembic history --oneline
 
 ## API Endpoints
 
-### Reviews
+### Review Collection
 
-- `GET /api/reviews` - Get all reviews
-- `POST /api/reviews` - Create a new review
-- `GET /api/reviews/{review_id}` - Get a specific review
-- `POST /api/reviews/analyze` - Analyze sentiment of a review
+- `POST /api/reviews/collect` - Collect a scraped review and automatically create the associated product if needed
+  - Request body should include review attributes and product information.
+  - Example required fields: `title`, `text`, `product_name` or `product_id`
+  - Optional product fields: `product_description`
+  - Example review fields: `color`, `storage_size`, `rating`, `verified_purchase`
+
+### Review Retrieval (Search)
+
+- `GET /api/reviews/search?color=<color>&storage_size=<size>&rating=<rating>` - Search and retrieve reviews by attributes
+  - Query Parameters (all optional):
+    - `color`: Filter by product color (e.g., "Red", "Blue", "Black")
+    - `storage_size`: Filter by storage size (e.g., "64GB", "128GB", "256GB")
+    - `rating`: Filter by review rating (e.g., 1, 2, 3, 4, 5)
+  - Example: `/api/reviews/search?color=Red&rating=5`
+
+### Sentiment Analysis
+
+- `POST /api/reviews/sentiment/analyze` - Analyze sentiment of a given text (without storing)
+  - Request body: `{"text": "Great product!"}`
+  - Returns: Sentiment analysis result with confidence score
+  - Use case: Quick sentiment check without creating a review record
 
 ### Health Check
 
@@ -141,13 +158,28 @@ alembic history --oneline
 
 ## Database Schema
 
+### Products Table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | String (UUID) | Primary key |
+| name | String | Product name |
+| description | String | Product description (optional) |
+| created_at | DateTime | Creation timestamp |
+| updated_at | DateTime | Last update timestamp |
+
 ### Reviews Table
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | String (UUID) | Primary key |
+| title | String | Review title |
 | text | String | Review text |
-| product_id | String | Product ID |
+| product_id | String | Foreign key referencing `products.id` |
+| color | String | Product color (optional) |
+| storage_size | String | Product storage variant/size (optional) |
+| rating | Integer | Review rating 1-5 (optional) |
+| verified_purchase | Boolean | Whether this is a verified purchase (default: False) |
 | sentiment | String | Sentiment label (positive, negative, neutral) |
 | confidence | Float | Confidence score (0.0 - 1.0) |
 | created_at | DateTime | Creation timestamp |
@@ -173,8 +205,92 @@ This will create a new migration file in `alembic/versions/` that you can review
 - **SQLite**: Lightweight SQL database
 - **Alembic**: Database migration tool for SQLAlchemy
 
+## API Usage Examples
+
+### Create a Review
+
+```bash
+curl -X POST "http://localhost:8000/api/reviews" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Great product for the price",
+    "text": "Great product, very satisfied! Works perfectly as described.",
+    "product_id": "PROD123",
+    "color": "Red",
+    "storage_size": "128GB",
+    "rating": 5,
+    "verified_purchase": true
+  }'
+```
+
+### Search Reviews by Attributes
+
+```bash
+# Get all reviews for Red color with 5-star rating
+curl "http://localhost:8000/api/reviews/search?color=Red&rating=5"
+
+# Get reviews by storage size
+curl "http://localhost:8000/api/reviews/search?storage_size=256GB"
+
+# Combine multiple filters
+curl "http://localhost:8000/api/reviews/search?color=Black&storage_size=128GB&rating=4"
+```
+
+### Collect Scraped Review
+
+```bash
+curl -X POST "http://localhost:8000/api/reviews/collect" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Amazing value for money",
+    "text": "This phone has excellent battery life and camera quality.",
+    "product_name": "SuperPhone X",
+    "product_description": "High-end smartphone with 128GB storage",
+    "color": "Blue",
+    "storage_size": "128GB",
+    "rating": 5,
+    "verified_purchase": true
+  }'
+```
+
+### Analyze Sentiment (Without Storing)
+
+```bash
+curl -X POST "http://localhost:8000/api/reviews/sentiment/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "This product is amazing and works perfectly!"
+  }'
+```
+
 ## Development
 
 To develop further, implement the sentiment analysis logic in `routes/reviews.py` where marked with TODO comments.
+
+### Sentiment Analysis Integration
+
+You can integrate with any sentiment analysis library:
+- **TextBlob**: Simple, rule-based approach
+- **VADER (NLTK)**: Lexicon-based sentiment analysis
+- **Hugging Face Transformers**: Deep learning models (RoBERTa, DistilBERT)
+- **AWS Comprehend**: Cloud-based API
+- **Google Cloud NLP**: Cloud-based API
+
+Example with TextBlob:
+```python
+from textblob import TextBlob
+
+def analyze_sentiment(text: str):
+    blob = TextBlob(text)
+    polarity = blob.sentiment.polarity
+    
+    if polarity > 0.1:
+        return "positive"
+    elif polarity < -0.1:
+        return "negative"
+    else:
+        return "neutral"
+```
+
 
 

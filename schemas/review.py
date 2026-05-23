@@ -4,8 +4,15 @@ from datetime import datetime
 
 
 class ReviewBase(BaseModel):
+    title: str
     text: str
-    product_id: str
+    product_id: str | None = None
+    product_name: str | None = None
+    product_description: str | None = None
+    color: str | None = None
+    storage_size: str | None = None
+    rating: int | None = None
+    verified_purchase: bool = False
 
 
 class ReviewCreate(ReviewBase):
@@ -23,9 +30,24 @@ class Review(ReviewBase):
         from_attributes = True
 
 
+class ReviewQuery(BaseModel):
+    """Schema for filtering reviews"""
+    color: str | None = None
+    storage_size: str | None = None
+    rating: int | None = None
+
+
 class AnalysisResult(BaseModel):
     review_id: str
+    title: str
     text: str
     sentiment: str
     confidence: float
+
+
+class SentimentAnalysisRequest(BaseModel):
+    """Request schema for sentiment analysis"""
+    text: str
+
+
 
