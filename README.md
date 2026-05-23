@@ -1,6 +1,6 @@
 # Product Review Analytics System
 
-A FastAPI-based REST API for analyzing product reviews and performing sentiment analysis with SQLAlchemy ORM and SQLite database.
+A FastAPI-based REST API for analyzing product reviews and performing sentiment analysis with SQLAlchemy ORM, SQLite database, and Alembic migrations.
 
 ## Project Structure
 
@@ -8,9 +8,15 @@ A FastAPI-based REST API for analyzing product reviews and performing sentiment 
 ├── main.py                 # Main FastAPI application
 ├── database.py             # Database configuration and connection
 ├── manage_db.py            # Database management utilities
+├── alembic.ini             # Alembic configuration
 ├── requirements.txt        # Project dependencies
 ├── .env.example           # Example environment variables
 ├── .gitignore             # Git ignore file
+├── alembic/                # Alembic migrations directory
+│   ├── env.py             # Alembic environment script
+│   ├── script.py.mako     # Migration template
+│   └── versions/          # Migration scripts
+│       └── 001_initial.py # Initial migration (create reviews table)
 ├── models/                # SQLAlchemy ORM models
 │   ├── __init__.py
 │   └── review.py          # Review model
@@ -38,13 +44,13 @@ cp .env.example .env
 
 Edit `.env` with your configuration as needed. By default, SQLite database will be created at `./reviews.db`.
 
-### 3. Initialize Database
-
-The database will be automatically initialized when the server starts, but you can manually initialize it:
+### 3. Run Database Migrations
 
 ```bash
-python manage_db.py init
+python manage_db.py migrate
 ```
+
+This will run all pending migrations and initialize the database schema.
 
 ### 4. Run the Server
 
@@ -62,12 +68,57 @@ The API will be available at `http://localhost:8000`
 
 ## Database Management
 
+### Using Alembic for Migrations
+
 ```bash
-# Initialize database (create tables)
+# Run all pending migrations to latest version (head)
+python manage_db.py migrate
+
+# Run migrations to a specific revision
+python manage_db.py migrate <revision>
+
+# Downgrade to a previous revision
+python manage_db.py downgrade <revision>
+
+# Show current database revision
+python manage_db.py current
+
+# Show migration history
+python manage_db.py history
+
+# Create a new migration (with autogenerate)
+python manage_db.py create '<migration_message>'
+```
+
+### Using Direct Database Initialization (Legacy)
+
+```bash
+# Initialize database directly (bypass migrations)
 python manage_db.py init
 
 # Reset database (drop and recreate all tables)
 python manage_db.py reset
+```
+
+### Direct Alembic Commands
+
+You can also use Alembic commands directly:
+
+```bash
+# Upgrade to latest migration
+alembic upgrade head
+
+# Downgrade by one revision
+alembic downgrade -1
+
+# Generate automatic migration from model changes
+alembic revision --autogenerate -m "Add new column"
+
+# Show current revision
+alembic current
+
+# Show revision history
+alembic history --oneline
 ```
 
 ## API Documentation
@@ -102,6 +153,17 @@ python manage_db.py reset
 | created_at | DateTime | Creation timestamp |
 | updated_at | DateTime | Last update timestamp |
 
+## Creating New Migrations
+
+When you modify your SQLAlchemy models, you can create a new migration:
+
+```bash
+# Alembic will automatically detect changes and generate migration
+python manage_db.py create 'Add rating column to reviews'
+```
+
+This will create a new migration file in `alembic/versions/` that you can review before running.
+
 ## Technologies
 
 - **FastAPI**: Modern web framework for building APIs
@@ -109,8 +171,10 @@ python manage_db.py reset
 - **Pydantic**: Data validation using Python type annotations
 - **SQLAlchemy**: SQL toolkit and ORM
 - **SQLite**: Lightweight SQL database
+- **Alembic**: Database migration tool for SQLAlchemy
 
 ## Development
 
 To develop further, implement the sentiment analysis logic in `routes/reviews.py` where marked with TODO comments.
+
 
