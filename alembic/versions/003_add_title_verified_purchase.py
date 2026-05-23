@@ -1,4 +1,4 @@
-"""Add title and verified_purchase columns
+"""Add verified_purchase column
 
 Revision ID: 003_add_title_verified_purchase
 Revises: 002_add_product_attributes
@@ -17,10 +17,8 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('reviews', sa.Column('title', sa.String(), nullable=False, server_default=''))
     op.add_column('reviews', sa.Column('verified_purchase', sa.Boolean(), nullable=False, server_default='0'))
 
 
 def downgrade() -> None:
     op.drop_column('reviews', 'verified_purchase')
-    op.drop_column('reviews', 'title')
