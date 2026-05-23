@@ -10,8 +10,8 @@ A FastAPI-based REST API for analyzing product reviews and performing sentiment 
 ├── manage_db.py            # Database management utilities
 ├── alembic.ini             # Alembic configuration
 ├── requirements.txt        # Project dependencies
-├── .env.example           # Example environment variables
-├── .gitignore             # Git ignore file
+├── .env                    # Example environment variables
+├── .gitignore              # Git ignore file
 ├── alembic/                # Alembic migrations directory
 │   ├── env.py             # Alembic environment script
 │   ├── script.py.mako     # Migration template
