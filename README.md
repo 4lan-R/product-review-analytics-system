@@ -1,6 +1,6 @@
 # Product Review Analytics System
 
-A FastAPI-based REST API for analyzing product reviews and performing sentiment analysis with SQLAlchemy ORM, SQLite database, and Alembic migrations.
+A FastAPI-based REST API for product review analytics. The application scrapes product reviews using Playwright and BeautifulSoup, stores data using SQLAlchemy ORM and SQLite, manages schema changes with Alembic, and performs sentiment analysis and keyword extraction using VADER Sentiment to generate actionable insights from customer reviews.
 
 ## Project Structure
 
