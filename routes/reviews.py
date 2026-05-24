@@ -2,8 +2,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas.review import ReviewLinkCreate, Review, AnalysisResult, SentimentAnalysisRequest
-from services.review_service import collect_review_from_link, search_reviews, analyze_sentiment
+from schemas.product import ProductResponse
+from schemas.review import ReviewLinkRequest, ReviewBase
+from services.review_service import collect_review_from_link, search_reviews
 
 router = APIRouter(
     prefix="/api/reviews",
@@ -12,9 +13,9 @@ router = APIRouter(
 )
 
 
-@router.post("/collect", response_model=Review)
+@router.post("/collect", response_model=ProductResponse)
 async def collect_review_endpoint(
-    payload: ReviewLinkCreate,
+    payload: ReviewLinkRequest,
     db: Session = Depends(get_db),
 ):
     """
@@ -27,7 +28,7 @@ async def collect_review_endpoint(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/search", response_model=list[Review])
+@router.get("/search", response_model=list[ReviewBase])
 async def search_reviews_endpoint(
     color: str | None = Query(None),
     storage_size: str | None = Query(None),
@@ -43,19 +44,5 @@ async def search_reviews_endpoint(
     - rating: Filter by review rating
     """
     return search_reviews(db, color=color, storage_size=storage_size, rating=rating)
-
-
-@router.post("/sentiment/analyze", response_model=AnalysisResult)
-async def analyze_sentiment_endpoint(
-    request: SentimentAnalysisRequest,
-    db: Session = Depends(get_db),
-):
-    """
-    Analyze sentiment of a given review text.
-
-    This API performs sentiment analysis on the provided text without
-    storing it in the database.
-    """
-    return analyze_sentiment(request)
 
 

@@ -5,10 +5,11 @@ import re
 import urllib.error
 import urllib.request
 
-from schemas.review import ReviewCreate
+from schemas.review import ReviewBase
+from schemas.product import ProductResponse
 
 
-def scrape_review_from_link(link: str) -> ReviewCreate:
+def scrape_review_from_link(link: str) -> ProductResponse:
     """Download a web page and extract review/product metadata."""
     try:
         request = urllib.request.Request(
@@ -64,10 +65,15 @@ def scrape_review_from_link(link: str) -> ReviewCreate:
         raise ValueError("Scraped review text was empty")
 
     scraped_data = {
-        "title": title,
-        "text": clean_text,
+        "review_title": title,
+        "review_text": clean_text,
         "product_name": title,
         "product_description": description or clean_text[:200],
     }
 
-    return ReviewCreate(**scraped_data)
+    review = ReviewBase(**scraped_data)
+    return ProductResponse(
+        name=title,
+        description=description or clean_text[:200],
+        reviews=[review]
+    )

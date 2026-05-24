@@ -10,8 +10,8 @@ class Review(Base):
     __tablename__ = "reviews"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    title = Column(String, nullable=False)
-    text = Column(String, nullable=False)
+    review_title = Column(String, nullable=False)
+    review_text = Column(String, nullable=False)
     product_id = Column(String, ForeignKey("products.id"), nullable=False)
     color = Column(String, nullable=True)
     storage_size = Column(String, nullable=True)
@@ -25,6 +25,6 @@ class Review(Base):
     product = relationship("Product", back_populates="reviews")
 
     def __repr__(self):
-        return f"<Review(id={self.id}, title={self.title}, product_id={self.product_id}, sentiment={self.sentiment}, rating={self.rating}, verified={self.verified_purchase})>"
+        return f"<Review(id={self.id}, review_title={self.review_title}, product_id={self.product_id}, sentiment={self.sentiment}, rating={self.rating}, verified={self.verified_purchase})>"
 
 
