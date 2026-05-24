@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from schemas.product import ProductResponse
 from schemas.review import ReviewLinkRequest, ReviewBase
-from services.review_service import collect_review_from_link, search_reviews, analyze_product_reviews
+from services.review_service import collect_review_from_link, search_products, analyze_product_reviews
 
 router = APIRouter(
     prefix="/api/reviews",
@@ -27,24 +27,21 @@ async def collect_review_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-
-@router.get("/search", response_model=list[ReviewBase])
+@router.get("/search",response_model=list[ProductResponse])
 async def search_reviews_endpoint(
+    product_id: str | None = Query(None),
     color: str | None = Query(None),
     storage_size: str | None = Query(None),
     rating: int | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    """
-    Search and retrieve reviews by attributes.
-
-    Query Parameters:
-    - color: Filter by product color
-    - storage_size: Filter by storage size
-    - rating: Filter by review rating
-    """
-    return search_reviews(db, color=color, storage_size=storage_size, rating=rating)
-
+    return search_products(
+        db,
+        product_id=product_id,
+        color=color,
+        storage_size=storage_size,
+        rating=rating,
+    )
 
 @router.post("/analyze/{product_id}")
 async def analyze_reviews_endpoint(

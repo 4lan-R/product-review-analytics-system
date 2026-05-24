@@ -56,25 +56,6 @@ async def collect_review_from_link(
     )
 
 
-def search_reviews(
-    db: Session,
-    color: str | None = None,
-    storage_size: str | None = None,
-    rating: int | None = None,
-) -> list[ReviewModel]:
-    """Search reviews by optional filter criteria."""
-    query = db.query(ReviewModel)
-
-    if color:
-        query = query.filter(ReviewModel.color == color)
-    if storage_size:
-        query = query.filter(ReviewModel.storage_size == storage_size)
-    if rating:
-        query = query.filter(ReviewModel.rating == rating)
-
-    return query.all()
-
-
 def analyze_product_reviews(
     db: Session,
     product_id: str,
@@ -113,3 +94,38 @@ def analyze_product_reviews(
             "top_negative_keywords"
         ],
     }
+
+
+def search_products(
+    db: Session,
+    product_id: str | None = None,
+    color: str | None = None,
+    storage_size: str | None = None,
+    rating: int | None = None,
+):
+    query = db.query(ProductModel)
+
+    if product_id:
+        query = query.filter(
+            ProductModel.id == product_id
+        )
+
+    if color or storage_size or rating:
+        query = query.join(ProductModel.reviews)
+
+        if color:
+            query = query.filter(
+                ReviewModel.color == color
+            )
+
+        if storage_size:
+            query = query.filter(
+                ReviewModel.storage_size == storage_size
+            )
+
+        if rating:
+            query = query.filter(
+                ReviewModel.rating == rating
+            )
+
+    return query.distinct().all()

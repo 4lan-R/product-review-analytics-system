@@ -5,7 +5,7 @@ from database import init_db
 
 app = FastAPI(
     title="Product Review Analytics System",
-    description="API for analyzing product reviews and sentiment analysis",
+    description="REST APIs for product review analytics. The application scrapes product reviews using Playwright and BeautifulSoup, stores data using SQLAlchemy ORM and SQLite, manages schema changes with Alembic, and performs sentiment analysis and keyword extraction using VADER Sentiment to generate actionable insights from customer reviews.",
     version="1.0.0"
 )
 
