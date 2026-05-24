@@ -20,7 +20,7 @@ async def collect_review_endpoint(
 ):
     """
     Collect a review by scraping the provided link and automatically create
-    the associated product from extracted page metadata.
+    the associated product and reviews from extracted page metadata.
     """
     try:
         return await collect_review_from_link(db, str(payload.link))

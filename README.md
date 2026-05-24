@@ -36,25 +36,7 @@ A FastAPI-based REST API for analyzing product reviews and performing sentiment 
 pip install -r requirements.txt
 ```
 
-The project uses the following key dependencies:
-- **FastAPI** & **Uvicorn**: Web framework and server
-- **SQLAlchemy**: ORM for database operations
-- **Alembic**: Database migration management
-- **Pydantic**: Data validation
-- **Playwright**: Web scraping and browser automation
-- **BeautifulSoup4** & **lxml**: HTML parsing for web scraping
-
-### 2. Install Playwright Browsers
-
-Playwright requires browser executables to be installed separately:
-
-```bash
-python -m playwright install
-```
-
-This downloads the necessary Chromium, Firefox, and WebKit browsers for web scraping and automation.
-
-### 3. Configure Environment Variables (Optional)
+### 2. Configure Environment Variables (Optional)
 
 ```bash
 cp .env.example .env
@@ -62,7 +44,7 @@ cp .env.example .env
 
 Edit `.env` with your configuration as needed. By default, SQLite database will be created at `./reviews.db`.
 
-### 4. Run Database Migrations
+### 3. Run Database Migrations
 
 ```bash
 python manage_db.py migrate
@@ -70,7 +52,7 @@ python manage_db.py migrate
 
 This will run all pending migrations and initialize the database schema.
 
-### 5. Run the Server
+### 4. Run the Server
 
 ```bash
 python main.py
@@ -83,20 +65,6 @@ uvicorn main:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
-
-## Web Scraping Features
-
-The system includes web scraping capabilities to collect product reviews from e-commerce sites:
-
-- **Async Scraping**: Uses Playwright's async API for efficient concurrent scraping
-- **BeautifulSoup Parsing**: Parses HTML to extract review data, product information, and ratings
-- **Headless Browser**: Runs in headless mode for faster performance
-
-### Scraping Endpoint
-
-- `POST /api/reviews/collect` - Scrape a product link and collect reviews
-  - Request: `{"link": "https://example.com/product"}`
-  - Returns: Product details with extracted reviews
 
 ## Database Management
 
@@ -162,27 +130,88 @@ alembic history --oneline
 
 ### Review Collection
 
-- `POST /api/reviews/collect` - Collect a scraped review and automatically create the associated product if needed
-  - Request body should include review attributes and product information.
-  - Example required fields: `title`, `text`, `product_name` or `product_id`
-  - Optional product fields: `product_description`
-  - Example review fields: `color`, `storage_size`, `rating`, `verified_purchase`
+- `POST /api/reviews/collect` - Scrape a product page and automatically create the associated product and reviews.
+
+#### Request Body
+
+```json
+{
+  "link": "https://www.amazon.in/product-review-page-url"
+}
+```
+
+#### Features
+
+- Scrapes product information
+- Extracts product title and description
+- Extracts available reviews
+- Creates a product record
+- Creates associated review records
+
+---
 
 ### Review Retrieval (Search)
 
-- `GET /api/reviews/search?color=<color>&storage_size=<size>&rating=<rating>` - Search and retrieve reviews by attributes
-  - Query Parameters (all optional):
-    - `color`: Filter by product color (e.g., "Red", "Blue", "Black")
-    - `storage_size`: Filter by storage size (e.g., "64GB", "128GB", "256GB")
-    - `rating`: Filter by review rating (e.g., 1, 2, 3, 4, 5)
-  - Example: `/api/reviews/search?color=Red&rating=5`
+- `GET /api/reviews/search` - Search and retrieve reviews by attributes.
+
+#### Query Parameters (all optional)
+
+| Parameter | Description |
+|------------|------------|
+| color | Filter by product color |
+| storage_size | Filter by storage size |
+| rating | Filter by review rating |
+
+#### Examples
+
+```text
+/api/reviews/search?color=Black
+```
+
+```text
+/api/reviews/search?storage_size=256GB
+```
+
+```text
+/api/reviews/search?rating=5
+```
 
 ### Sentiment Analysis
 
-- `POST /api/reviews/sentiment/analyze` - Analyze sentiment of a given text (without storing)
-  - Request body: `{"text": "Great product!"}`
-  - Returns: Sentiment analysis result with confidence score
-  - Use case: Quick sentiment check without creating a review record
+- `POST /api/reviews/analyze/{product_id}`
+
+Analyzes all reviews belonging to a product using VADER sentiment analysis.
+
+Features:
+- Classifies each review as Positive, Negative, or Neutral
+- Stores sentiment in the database
+- Stores confidence score for each review
+- Extracts top positive keywords
+- Extracts top negative keywords
+
+Example Response:
+
+```json
+{
+  "product_id": "2cba5d7c-7de6-4bf6-8363-fe48d92c1b0f",
+  "total_reviews": 8,
+  "positive_reviews": 7,
+  "negative_reviews": 1,
+  "neutral_reviews": 0,
+  "top_positive_keywords": [
+    "camera",
+    "battery",
+    "display",
+    "quality",
+    "performance"
+  ],
+  "top_negative_keywords": [
+    "heating",
+    "issue",
+    "slow"
+  ]
+}
+```
 
 ### Health Check
 
@@ -230,99 +259,134 @@ This will create a new migration file in `alembic/versions/` that you can review
 
 ## Technologies
 
-- **FastAPI**: Modern web framework for building APIs
-- **Uvicorn**: ASGI server
-- **Pydantic**: Data validation using Python type annotations
-- **SQLAlchemy**: SQL toolkit and ORM
-- **SQLite**: Lightweight SQL database
-- **Alembic**: Database migration tool for SQLAlchemy
+- **FastAPI**: REST API development
+- **Uvicorn**: ASGI application server
+- **Pydantic**: Request/response validation
+- **SQLAlchemy**: ORM and database operations
+- **SQLite**: Persistent data storage
+- **Alembic**: Database migrations
+- **Playwright**: Product page scraping and review collection
+- **BeautifulSoup4**: HTML parsing and review extraction
+- **VADER Sentiment**: Sentiment classification (Positive, Negative, Neutral)
+- **Scikit-Learn**: Stopword removal and keyword extraction
+
 
 ## API Usage Examples
 
-### Create a Review
+### Collect Product Reviews from Amazon
 
-```bash
-curl -X POST "http://localhost:8000/api/reviews" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Great product for the price",
-    "text": "Great product, very satisfied! Works perfectly as described.",
-    "product_id": "PROD123",
-    "color": "Red",
-    "storage_size": "128GB",
-    "rating": 5,
-    "verified_purchase": true
-  }'
-```
-
-### Search Reviews by Attributes
-
-```bash
-# Get all reviews for Red color with 5-star rating
-curl "http://localhost:8000/api/reviews/search?color=Red&rating=5"
-
-# Get reviews by storage size
-curl "http://localhost:8000/api/reviews/search?storage_size=256GB"
-
-# Combine multiple filters
-curl "http://localhost:8000/api/reviews/search?color=Black&storage_size=128GB&rating=4"
-```
-
-### Collect Scraped Review
+Scrape a product page and automatically create the product and reviews.
 
 ```bash
 curl -X POST "http://localhost:8000/api/reviews/collect" \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Amazing value for money",
-    "text": "This phone has excellent battery life and camera quality.",
-    "product_name": "SuperPhone X",
-    "product_description": "High-end smartphone with 128GB storage",
-    "color": "Blue",
-    "storage_size": "128GB",
-    "rating": 5,
-    "verified_purchase": true
+    "link": "https://www.amazon.in/product-review-page-url"
   }'
 ```
 
-### Analyze Sentiment (Without Storing)
+Example Response:
+
+```json
+{
+  "id": "2cba5d7c-7de6-4bf6-8363-fe48d92c1b0f",
+  "name": "Samsung Galaxy S24",
+  "description": "Latest Samsung smartphone...",
+  "reviews": [
+    {
+      "review_title": "Excellent phone",
+      "review_text": "Amazing camera and battery life.",
+      "rating": 5,
+      "verified_purchase": true
+    }
+  ]
+}
+```
+
+---
+
+### Search Reviews
+
+Search reviews using optional filters.
+
+#### Filter by Rating
 
 ```bash
-curl -X POST "http://localhost:8000/api/reviews/sentiment/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "This product is amazing and works perfectly!"
-  }'
+curl "http://localhost:8000/api/reviews/search?rating=5"
 ```
 
-## Development
+#### Filter by Color
 
-To develop further, implement the sentiment analysis logic in `routes/reviews.py` where marked with TODO comments.
-
-### Sentiment Analysis Integration
-
-You can integrate with any sentiment analysis library:
-- **TextBlob**: Simple, rule-based approach
-- **VADER (NLTK)**: Lexicon-based sentiment analysis
-- **Hugging Face Transformers**: Deep learning models (RoBERTa, DistilBERT)
-- **AWS Comprehend**: Cloud-based API
-- **Google Cloud NLP**: Cloud-based API
-
-Example with TextBlob:
-```python
-from textblob import TextBlob
-
-def analyze_sentiment(text: str):
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-    
-    if polarity > 0.1:
-        return "positive"
-    elif polarity < -0.1:
-        return "negative"
-    else:
-        return "neutral"
+```bash
+curl "http://localhost:8000/api/reviews/search?color=Black"
 ```
 
+#### Filter by Storage Size
 
+```bash
+curl "http://localhost:8000/api/reviews/search?storage_size=256GB"
+```
 
+#### Combine Filters
+
+```bash
+curl "http://localhost:8000/api/reviews/search?color=Black&storage_size=256GB&rating=5"
+```
+
+Example Response:
+
+```json
+[
+  {
+    "review_title": "Great camera",
+    "review_text": "Picture quality is excellent.",
+    "rating": 5,
+    "verified_purchase": true,
+    "color": "Black",
+    "storage_size": "256GB"
+  }
+]
+```
+
+---
+
+### Analyze Product Reviews
+
+Analyze all reviews belonging to a product using VADER sentiment analysis.
+
+```bash
+curl -X POST "http://localhost:8000/api/reviews/analyze/2cba5d7c-7de6-4bf6-8363-fe48d92c1b0f"
+```
+
+Example Response:
+
+```json
+{
+  "product_id": "2cba5d7c-7de6-4bf6-8363-fe48d92c1b0f",
+  "total_reviews": 8,
+  "positive_reviews": 7,
+  "negative_reviews": 1,
+  "neutral_reviews": 0,
+  "top_positive_keywords": [
+    "camera",
+    "battery",
+    "display",
+    "quality",
+    "performance"
+  ],
+  "top_negative_keywords": [
+    "heating",
+    "issue",
+    "slow"
+  ]
+}
+```
+
+### What Happens During Analysis?
+
+For each review:
+
+- Sentiment is classified as **Positive**, **Negative**, or **Neutral**
+- Confidence score is calculated using VADER
+- Sentiment and confidence are stored in the database
+- Positive and negative keywords are extracted from review text
