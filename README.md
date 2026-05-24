@@ -36,7 +36,25 @@ A FastAPI-based REST API for analyzing product reviews and performing sentiment 
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment Variables (Optional)
+The project uses the following key dependencies:
+- **FastAPI** & **Uvicorn**: Web framework and server
+- **SQLAlchemy**: ORM for database operations
+- **Alembic**: Database migration management
+- **Pydantic**: Data validation
+- **Playwright**: Web scraping and browser automation
+- **BeautifulSoup4** & **lxml**: HTML parsing for web scraping
+
+### 2. Install Playwright Browsers
+
+Playwright requires browser executables to be installed separately:
+
+```bash
+python -m playwright install
+```
+
+This downloads the necessary Chromium, Firefox, and WebKit browsers for web scraping and automation.
+
+### 3. Configure Environment Variables (Optional)
 
 ```bash
 cp .env.example .env
@@ -44,7 +62,7 @@ cp .env.example .env
 
 Edit `.env` with your configuration as needed. By default, SQLite database will be created at `./reviews.db`.
 
-### 3. Run Database Migrations
+### 4. Run Database Migrations
 
 ```bash
 python manage_db.py migrate
@@ -52,7 +70,7 @@ python manage_db.py migrate
 
 This will run all pending migrations and initialize the database schema.
 
-### 4. Run the Server
+### 5. Run the Server
 
 ```bash
 python main.py
@@ -65,6 +83,20 @@ uvicorn main:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
+
+## Web Scraping Features
+
+The system includes web scraping capabilities to collect product reviews from e-commerce sites:
+
+- **Async Scraping**: Uses Playwright's async API for efficient concurrent scraping
+- **BeautifulSoup Parsing**: Parses HTML to extract review data, product information, and ratings
+- **Headless Browser**: Runs in headless mode for faster performance
+
+### Scraping Endpoint
+
+- `POST /api/reviews/collect` - Scrape a product link and collect reviews
+  - Request: `{"link": "https://example.com/product"}`
+  - Returns: Product details with extracted reviews
 
 ## Database Management
 

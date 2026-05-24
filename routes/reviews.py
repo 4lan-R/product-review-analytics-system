@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from schemas.product import ProductResponse
 from schemas.review import ReviewLinkRequest, ReviewBase
-from services.review_service import collect_review_from_link, search_reviews
+from services.review_service import collect_review_from_link, search_reviews, analyze_product_reviews
 
 router = APIRouter(
     prefix="/api/reviews",
@@ -46,3 +46,22 @@ async def search_reviews_endpoint(
     return search_reviews(db, color=color, storage_size=storage_size, rating=rating)
 
 
+@router.post("/analyze/{product_id}")
+async def analyze_reviews_endpoint(
+    product_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Analyze sentiments for all reviews belonging
+    to a specific product.
+    """
+    try:
+        return analyze_product_reviews(
+            db,
+            product_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        ) from exc
