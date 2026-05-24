@@ -10,9 +10,9 @@ from schemas.product import ProductResponse
 from services.review_scraper import scrape_review_from_link
 
 
-def collect_review_from_link(db: Session, link: str) -> ProductResponse:
+async def collect_review_from_link(db: Session, link: str) -> ProductResponse:
     """Fetch review content from a URL, then persist it as a review."""
-    scraped_review = scrape_review_from_link(link)
+    scraped_review = await scrape_review_from_link(link)
     return scraped_review
 
 

@@ -7,8 +7,6 @@ class ReviewBase(BaseModel):
     review_title: str
     review_text: str
     product_id: str | None = None
-    product_name: str | None = None
-    product_description: str | None = None
     color: str | None = None
     storage_size: str | None = None
     rating: int | None = None

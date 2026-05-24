@@ -23,7 +23,7 @@ async def collect_review_endpoint(
     the associated product from extracted page metadata.
     """
     try:
-        return collect_review_from_link(db, payload.link)
+        return await collect_review_from_link(db, str(payload.link))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
